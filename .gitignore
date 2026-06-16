@@ -40,3 +40,6 @@ config.local.json
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+# Uploaded files
+public/uploads/

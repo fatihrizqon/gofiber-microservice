@@ -13,6 +13,7 @@ func Migrate(db *gorm.DB) {
 		&entity.Credential{},
 		&entity.Role{},
 		&entity.Permission{},
+		&entity.File{},
 	)
 
 	seedDefaultData(db)

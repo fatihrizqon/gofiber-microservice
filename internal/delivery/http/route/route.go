@@ -15,6 +15,7 @@ type RouteConfig struct {
 	RbacEngine        *rbac.RBAC
 	UserHandler       *handler.UserHandler
 	AuthHandler       *handler.AuthHandler
+	FileHandler       *handler.FileHandler
 	Production        bool
 }
 
@@ -39,4 +40,6 @@ func (rc *RouteConfig) SetupAuthRoute() {
 	rc.App.Get("/api/v1/users/:id", rc.RbacEngine.Require("users.read"), rc.UserHandler.FindById)
 	rc.App.Put("/api/v1/users/:id", rc.RbacEngine.Require("users.write"), rc.UserHandler.Update)
 	rc.App.Delete("/api/v1/users/:id", rc.RbacEngine.Require("users.write"), rc.UserHandler.Delete)
+
+	rc.App.Post("/api/v1/files/upload", rc.FileHandler.Upload)
 }
