@@ -26,6 +26,37 @@ func NewAuthHandler(serv service.IAuthService, production bool) *AuthHandler {
 	}
 }
 
+// Register godoc
+// @Summary User registration
+// @Description Register a new user
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param request body request.RegisterRequest true "Register request"
+// @Success 201 {object} response.JSON "User registered successfully"
+// @Failure 400 {object} response.JSON "Invalid request format"
+// @Failure 500 {object} response.JSON "Internal server error"
+// @Router /api/v1/auth/register [post]
+func (h *AuthHandler) Register(ctx fiber.Ctx) error {
+	var req request.RegisterRequest
+	if err := ctx.Bind().Body(&req); err != nil {
+		util.HandleError(ctx, fiber.StatusBadRequest, err)
+		return nil
+	}
+
+	result, err := h.IAuthService.Register(req)
+	if err != nil {
+		util.HandleError(ctx, fiber.StatusInternalServerError, err)
+		return nil
+	}
+
+	return ctx.Status(fiber.StatusOK).JSON(response.JSON{
+		Status:  fiber.StatusOK,
+		Message: "user registered successfully",
+		Data:    result,
+	})
+}
+
 // Login godoc
 // @Summary User login
 // @Description Authenticate user and return a JWT token in a cookie

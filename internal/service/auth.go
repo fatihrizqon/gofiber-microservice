@@ -20,6 +20,7 @@ type AuthResult struct {
 }
 
 type IAuthService interface {
+	Register(req request.RegisterRequest) (entity.User, error)
 	Login(req request.LoginRequest) (AuthResult, error)
 	RefreshToken(refreshToken string) (AuthResult, error)
 	Logout(refreshToken string) error
@@ -41,6 +42,18 @@ func NewAuthService(
 		ITokenRepository: tokenRepo,
 		validate:         validate,
 	}
+}
+
+func (s *AuthService) Register(req request.RegisterRequest) (entity.User, error) {
+	var user entity.User
+	user.Email = req.Email
+	passwordHash, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+	if err != nil {
+		return entity.User{}, fmt.Errorf("failed to hash password: %w", err)
+	}
+	user.Password = string(passwordHash)
+
+	return s.IAuthRepository.Register(user)
 }
 
 func (s *AuthService) Login(req request.LoginRequest) (AuthResult, error) {

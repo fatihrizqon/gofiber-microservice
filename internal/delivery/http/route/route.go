@@ -25,9 +25,9 @@ func (rc *RouteConfig) Setup() {
 }
 
 func (rc *RouteConfig) SetupGuestRoute() {
+	rc.App.Post("/api/v1/auth/register", rc.AuthHandler.Register)
 	rc.App.Post("/api/v1/auth/login", rc.AuthHandler.Login)
 	rc.App.Post("/api/v1/auth/refresh", rc.AuthHandler.Refresh)
-	rc.App.Post("/api/v1/users", rc.UserHandler.Create)
 	rc.App.Get("/swagger/*", swagger.HandlerDefault)
 }
 
