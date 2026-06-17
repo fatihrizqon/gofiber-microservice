@@ -21,13 +21,6 @@ func NewAuthRepository(Db *gorm.DB) IAuthRepository {
 }
 
 func (r *AuthRepository) Register(user entity.User) (entity.User, error) {
-	var existingUser entity.User
-	if !errors.Is(r.Db.Where("username = ?", user.Username).First(&existingUser).Error, gorm.ErrRecordNotFound) {
-		return entity.User{}, errors.New("username already taken")
-	}
-	if !errors.Is(r.Db.Where("email = ?", user.Email).First(&existingUser).Error, gorm.ErrRecordNotFound) {
-		return entity.User{}, errors.New("email already taken")
-	}
 	if err := r.Db.Create(&user).Error; err != nil {
 		return entity.User{}, err
 	}
