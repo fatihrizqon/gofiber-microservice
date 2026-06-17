@@ -3,7 +3,7 @@ package route
 import (
 	_ "github.com/fatihrizqon/gofiber-microservice/docs"
 	"github.com/fatihrizqon/gofiber-microservice/internal/delivery/handler"
-	"github.com/fatihrizqon/gofiber-rbac"
+	"github.com/fatihrizqon/gofiber-microservice/internal/rbac"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/swagger"
 )

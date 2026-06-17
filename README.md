@@ -10,6 +10,7 @@ This repository is intended for **portfolio purposes** and as a reference for bu
 
 - RESTful API built with **Fiber v2**
 - **JWT-based authentication** (access token)
+- **Dedicated Role-Based Access Control (RBAC)** local middleware (`internal/rbac`)
 - Clean Architecture (separation of concerns)
 - Request validation using `go-playground/validator`
 - PostgreSQL integration using **GORM**
@@ -161,7 +162,8 @@ go test ./...
 │   ├── service/
 │   ├── repository/
 │   ├── entity/
-│   └── middleware/
+│   ├── middleware/
+│   └── rbac/      # Dedicated RBAC local middleware
 ├── logger/
 ├── middleware/
 ├── router/

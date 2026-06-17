@@ -10,7 +10,7 @@ import (
 	"github.com/fatihrizqon/gofiber-microservice/internal/service"
 	"github.com/fatihrizqon/gofiber-microservice/internal/util"
 	"github.com/fatihrizqon/gofiber-microservice/internal/util/storage"
-	"github.com/fatihrizqon/gofiber-rbac"
+	"github.com/fatihrizqon/gofiber-microservice/internal/rbac"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"github.com/sirupsen/logrus"
