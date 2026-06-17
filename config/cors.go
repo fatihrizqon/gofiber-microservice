@@ -1,17 +1,15 @@
 package config
 
 import (
-	"strings"
-
-	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v3/middleware/cors"
 	"github.com/spf13/viper"
 )
 
 type CORSConfig struct {
-	AllowOrigins     string
-	AllowMethods     string
-	AllowHeaders     string
+	AllowOrigins     []string
+	AllowMethods     []string
+	AllowHeaders     []string
 	AllowCredentials bool
 }
 
@@ -26,9 +24,9 @@ func (c *CORSConfig) Handler() fiber.Handler {
 
 func NewCORS(v *viper.Viper) *CORSConfig {
 	return &CORSConfig{
-		AllowOrigins:     strings.Join(v.GetStringSlice("web.cors.allowed_origins"), ","),
-		AllowMethods:     strings.Join(v.GetStringSlice("web.cors.allowed_methods"), ","),
-		AllowHeaders:     strings.Join(v.GetStringSlice("web.cors.allowed_headers"), ","),
+		AllowOrigins:     v.GetStringSlice("web.cors.allowed_origins"),
+		AllowMethods:     v.GetStringSlice("web.cors.allowed_methods"),
+		AllowHeaders:     v.GetStringSlice("web.cors.allowed_headers"),
 		AllowCredentials: v.GetBool("web.cors.allow_credentials"),
 	}
 }

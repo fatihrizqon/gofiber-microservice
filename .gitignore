@@ -43,3 +43,6 @@ Thumbs.db
 
 # Uploaded files
 public/uploads/
+
+# Vendor
+vendor

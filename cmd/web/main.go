@@ -5,6 +5,7 @@ import (
 
 	"github.com/fatihrizqon/gofiber-microservice/config"
 	"github.com/fatihrizqon/gofiber-microservice/database"
+	"github.com/gofiber/fiber/v3"
 )
 
 // @title Go REST API with Fiber Framework
@@ -48,7 +49,7 @@ func main() {
 
 	port := viper.GetInt("web.port")
 
-	err := app.Listen(fmt.Sprintf(":%d", port))
+	err := app.Listen(fmt.Sprintf(":%d", port), fiber.ListenConfig{EnablePrefork: viper.GetBool("web.prefork")})
 
 	if err != nil {
 		log.Fatalf("Failed to start server: %v", err)

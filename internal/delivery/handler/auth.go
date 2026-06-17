@@ -8,7 +8,7 @@ import (
 	"github.com/fatihrizqon/gofiber-microservice/internal/helper"
 	"github.com/fatihrizqon/gofiber-microservice/internal/service"
 	"github.com/fatihrizqon/gofiber-microservice/internal/util"
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 )
 
 type AuthHandler struct {
@@ -37,9 +37,9 @@ func NewAuthHandler(serv service.IAuthService, production bool) *AuthHandler {
 // @Failure 400 {object} response.JSON "Invalid request format"
 // @Failure 401 {object} response.JSON "Authentication failed"
 // @Router /api/v1/auth/login [post]
-func (h *AuthHandler) Login(ctx *fiber.Ctx) error {
+func (h *AuthHandler) Login(ctx fiber.Ctx) error {
 	var req request.LoginRequest
-	if err := ctx.BodyParser(&req); err != nil {
+	if err := ctx.Bind().Body(&req); err != nil {
 		util.HandleError(ctx, fiber.StatusBadRequest, err)
 		return nil
 	}
@@ -75,7 +75,7 @@ func (h *AuthHandler) Login(ctx *fiber.Ctx) error {
 // @Success 200 {object} response.AuthJSON
 // @Failure 401 {object} response.JSON "Unauthorized"
 // @Router /api/v1/auth/refresh [post]
-func (h *AuthHandler) Refresh(ctx *fiber.Ctx) error {
+func (h *AuthHandler) Refresh(ctx fiber.Ctx) error {
 	refreshToken := ctx.Cookies("refresh_token")
 	if refreshToken == "" {
 		return ctx.Status(fiber.StatusUnauthorized).JSON(response.JSON{
@@ -117,7 +117,7 @@ func (h *AuthHandler) Refresh(ctx *fiber.Ctx) error {
 // @Success 200 {object} response.JSON "Successfully logged out"
 // @Failure 401 {object} response.JSON "Unauthorized"
 // @Router /api/v1/auth/logout [post]
-func (h *AuthHandler) Logout(ctx *fiber.Ctx) error {
+func (h *AuthHandler) Logout(ctx fiber.Ctx) error {
 	refreshToken := ctx.Cookies("refresh_token")
 	if refreshToken == "" {
 		return ctx.Status(fiber.StatusUnauthorized).JSON(response.JSON{

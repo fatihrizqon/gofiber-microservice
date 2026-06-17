@@ -6,7 +6,7 @@ import (
 	"github.com/fatihrizqon/gofiber-microservice/internal/entity"
 	"github.com/fatihrizqon/gofiber-microservice/internal/service"
 	"github.com/fatihrizqon/gofiber-microservice/internal/util"
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
 )
 
@@ -29,9 +29,9 @@ func NewUserHandler(serv service.IUserService) *UserHandler {
 // @Success 201 {object} response.JSON "A new record has been stored."
 // @Failure 400 {object} response.JSON "Bad request"
 // @Router /api/v1/users [post]
-func (h *UserHandler) Create(ctx *fiber.Ctx) error {
+func (h *UserHandler) Create(ctx fiber.Ctx) error {
 	req := request.UserCreateRequest{}
-	if err := ctx.BodyParser(&req); err != nil {
+	if err := ctx.Bind().Body(&req); err != nil {
 		util.HandleError(ctx, fiber.StatusBadRequest, err)
 		return nil
 	}
@@ -39,13 +39,13 @@ func (h *UserHandler) Create(ctx *fiber.Ctx) error {
 	result, err := h.IUserService.Create(req)
 	if err != nil {
 		return ctx.Status(fiber.StatusBadRequest).JSON(response.JSON{
-			Status: fiber.StatusBadRequest,
+			Status:  fiber.StatusBadRequest,
 			Message: err.Error(),
 		})
 	}
 
 	return ctx.Status(fiber.StatusCreated).JSON(response.JSON{
-		Status: fiber.StatusCreated,
+		Status:  fiber.StatusCreated,
 		Message: "A new record has been stored.",
 		Data:    result,
 	})
@@ -68,13 +68,13 @@ func (h *UserHandler) Create(ctx *fiber.Ctx) error {
 // @Success 200 {object} response.JSON "Successfully retrieved all records."
 // @Failure 500 {object} response.JSON "Internal Server Error"
 // @Router /api/v1/users [get]
-func (h *UserHandler) FindAll(ctx *fiber.Ctx) error {
+func (h *UserHandler) FindAll(ctx fiber.Ctx) error {
 	qp := util.ParseQueryParams(ctx, entity.User{}.SearchableFields())
 
 	entities, totalCount, err := h.IUserService.FindAll(qp)
 	if err != nil {
 		return ctx.Status(fiber.StatusInternalServerError).JSON(response.JSON{
-			Status: fiber.StatusInternalServerError,
+			Status:  fiber.StatusInternalServerError,
 			Message: "Failed to retrieve records",
 			Errors:  err.Error(),
 		})
@@ -82,7 +82,7 @@ func (h *UserHandler) FindAll(ctx *fiber.Ctx) error {
 
 	if totalCount == 0 || (qp.Page-1)*qp.PageSize >= totalCount {
 		return ctx.Status(fiber.StatusOK).JSON(response.JSON{
-			Status: fiber.StatusOK,
+			Status:  fiber.StatusOK,
 			Message: "No records found.",
 			Data:    []response.UserResponse{},
 			Meta:    nil,
@@ -93,7 +93,7 @@ func (h *UserHandler) FindAll(ctx *fiber.Ctx) error {
 	meta := util.GenerateMeta(baseURL, qp, totalCount)
 
 	return ctx.Status(fiber.StatusOK).JSON(response.JSON{
-		Status: fiber.StatusOK,
+		Status:  fiber.StatusOK,
 		Message: "Successfully retrieved all records.",
 		Data:    entities,
 		Meta:    &meta,
@@ -111,7 +111,7 @@ func (h *UserHandler) FindAll(ctx *fiber.Ctx) error {
 // @Success 200 {object} response.JSON "Successfully retrieved selected record."
 // @Failure 404 {object} response.JSON "User not found"
 // @Router /api/v1/users/{id} [get]
-func (h *UserHandler) FindById(ctx *fiber.Ctx) error {
+func (h *UserHandler) FindById(ctx fiber.Ctx) error {
 	id := ctx.Params("id")
 	parsedId, err := uuid.Parse(id)
 	if err != nil {
@@ -122,13 +122,13 @@ func (h *UserHandler) FindById(ctx *fiber.Ctx) error {
 	result, err := h.IUserService.FindById(parsedId)
 	if err != nil {
 		return ctx.Status(fiber.StatusNotFound).JSON(response.JSON{
-			Status: fiber.StatusNotFound,
+			Status:  fiber.StatusNotFound,
 			Message: err.Error(),
 		})
 	}
 
 	return ctx.Status(fiber.StatusOK).JSON(response.JSON{
-		Status: fiber.StatusOK,
+		Status:  fiber.StatusOK,
 		Message: "Successfully retrieved selected record.",
 		Data:    result,
 	})
@@ -146,9 +146,9 @@ func (h *UserHandler) FindById(ctx *fiber.Ctx) error {
 // @Success 200 {object} response.JSON "Selected record has been updated."
 // @Failure 404 {object} response.JSON "User not found"
 // @Router /api/v1/users/{id} [put]
-func (h *UserHandler) Update(ctx *fiber.Ctx) error {
+func (h *UserHandler) Update(ctx fiber.Ctx) error {
 	req := request.UserUpdateRequest{}
-	if err := ctx.BodyParser(&req); err != nil {
+	if err := ctx.Bind().Body(&req); err != nil {
 		util.HandleError(ctx, fiber.StatusBadRequest, err)
 		return nil
 	}
@@ -164,13 +164,13 @@ func (h *UserHandler) Update(ctx *fiber.Ctx) error {
 	result, err := h.IUserService.Update(req)
 	if err != nil {
 		return ctx.Status(fiber.StatusNotFound).JSON(response.JSON{
-			Status: fiber.StatusNotFound,
+			Status:  fiber.StatusNotFound,
 			Message: err.Error(),
 		})
 	}
 
 	return ctx.Status(fiber.StatusOK).JSON(response.JSON{
-		Status: fiber.StatusOK,
+		Status:  fiber.StatusOK,
 		Message: "Selected record has been updated.",
 		Data:    result,
 	})
@@ -187,7 +187,7 @@ func (h *UserHandler) Update(ctx *fiber.Ctx) error {
 // @Success 200 {object} response.JSON "Selected record has been deleted."
 // @Failure 404 {object} response.JSON "User not found"
 // @Router /api/v1/users/{id} [delete]
-func (h *UserHandler) Delete(ctx *fiber.Ctx) error {
+func (h *UserHandler) Delete(ctx fiber.Ctx) error {
 	parsedId, err := uuid.Parse(ctx.Params("id"))
 	if err != nil {
 		util.HandleError(ctx, fiber.StatusBadRequest, err)
@@ -197,13 +197,13 @@ func (h *UserHandler) Delete(ctx *fiber.Ctx) error {
 	result, err := h.IUserService.Delete(parsedId)
 	if err != nil {
 		return ctx.Status(fiber.StatusNotFound).JSON(response.JSON{
-			Status: fiber.StatusNotFound,
+			Status:  fiber.StatusNotFound,
 			Message: err.Error(),
 		})
 	}
 
 	return ctx.Status(fiber.StatusOK).JSON(response.JSON{
-		Status: fiber.StatusOK,
+		Status:  fiber.StatusOK,
 		Message: "Selected record has been deleted.",
 		Data:    result,
 	})

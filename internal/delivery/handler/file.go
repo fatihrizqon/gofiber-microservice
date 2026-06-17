@@ -4,7 +4,7 @@ import (
 	"github.com/fatihrizqon/gofiber-microservice/internal/delivery/http/response"
 	"github.com/fatihrizqon/gofiber-microservice/internal/service"
 	"github.com/fatihrizqon/gofiber-microservice/internal/util"
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 )
 
 type FileHandler struct {
@@ -27,7 +27,7 @@ func NewFileHandler(serv service.IFileService) *FileHandler {
 // @Failure 400 {object} response.JSON "Bad request"
 // @Failure 401 {object} response.JSON "Unauthorized"
 // @Router /api/v1/files/upload [post]
-func (h *FileHandler) Upload(ctx *fiber.Ctx) error {
+func (h *FileHandler) Upload(ctx fiber.Ctx) error {
 	file, err := ctx.FormFile("file")
 	if err != nil {
 		return ctx.Status(fiber.StatusBadRequest).JSON(response.JSON{
@@ -44,7 +44,7 @@ func (h *FileHandler) Upload(ctx *fiber.Ctx) error {
 		})
 	}
 
-	result, err := h.IFileService.Upload(ctx.Context(), file, claims.UserID)
+	result, err := h.IFileService.Upload(ctx.RequestCtx(), file, claims.UserID)
 	if err != nil {
 		return ctx.Status(fiber.StatusBadRequest).JSON(response.JSON{
 			Status:  fiber.StatusBadRequest,
@@ -58,3 +58,5 @@ func (h *FileHandler) Upload(ctx *fiber.Ctx) error {
 		Data:    result,
 	})
 }
+
+// fiber:context-methods migrated

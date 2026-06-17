@@ -1,7 +1,7 @@
 package rbac
 
 import (
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 )
 
 // PermissionStore is an interface that must be implemented by the consumer
@@ -18,7 +18,7 @@ type Config struct {
 
 	// UserLookup defines how to retrieve the UserID from the Fiber Context.
 	// Default: looks up c.Locals("user_id") and returns it if it's a string.
-	UserLookup func(c *fiber.Ctx) string
+	UserLookup func(c fiber.Ctx) string
 
 	// UnauthorizedHandler defines the response handler when access is denied.
 	// Default: returns a 403 Forbidden status with a JSON message.
@@ -34,7 +34,7 @@ type RBAC struct {
 func New(cfg Config) *RBAC {
 	// Set default UserLookup if not provided
 	if cfg.UserLookup == nil {
-		cfg.UserLookup = func(c *fiber.Ctx) string {
+		cfg.UserLookup = func(c fiber.Ctx) string {
 			val := c.Locals("user_id")
 			if val == nil {
 				return ""
@@ -49,7 +49,7 @@ func New(cfg Config) *RBAC {
 
 	// Set default UnauthorizedHandler if not provided
 	if cfg.UnauthorizedHandler == nil {
-		cfg.UnauthorizedHandler = func(c *fiber.Ctx) error {
+		cfg.UnauthorizedHandler = func(c fiber.Ctx) error {
 			return c.Status(fiber.StatusForbidden).JSON(fiber.Map{
 				"message": "Forbidden",
 			})
@@ -62,7 +62,7 @@ func New(cfg Config) *RBAC {
 // Require is a middleware generator that checks if the logged-in user
 // has the specified permission.
 func (r *RBAC) Require(permission string) fiber.Handler {
-	return func(c *fiber.Ctx) error {
+	return func(c fiber.Ctx) error {
 		// 1. Get userID from Context
 		userID := r.config.UserLookup(c)
 		if userID == "" {

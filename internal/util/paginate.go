@@ -3,10 +3,10 @@ package util
 import (
 	"strconv"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 )
 
-func ParsePaginationParams(ctx *fiber.Ctx) (int, int, map[string]string) {
+func ParsePaginationParams(ctx fiber.Ctx) (int, int, map[string]string) {
 	page := 1
 	pageSize := 10
 	filters := make(map[string]string)

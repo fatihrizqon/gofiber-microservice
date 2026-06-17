@@ -3,16 +3,18 @@ package config
 import (
 	"fmt"
 
+	"github.com/gofiber/fiber/v3/middleware/static"
+
 	"github.com/fatihrizqon/gofiber-microservice/internal/delivery/handler"
 	"github.com/fatihrizqon/gofiber-microservice/internal/delivery/http/middleware"
 	"github.com/fatihrizqon/gofiber-microservice/internal/delivery/http/route"
+	"github.com/fatihrizqon/gofiber-microservice/internal/rbac"
 	"github.com/fatihrizqon/gofiber-microservice/internal/repository"
 	"github.com/fatihrizqon/gofiber-microservice/internal/service"
 	"github.com/fatihrizqon/gofiber-microservice/internal/util"
 	"github.com/fatihrizqon/gofiber-microservice/internal/util/storage"
-	"github.com/fatihrizqon/gofiber-microservice/internal/rbac"
 	"github.com/go-playground/validator/v10"
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"gorm.io/gorm"
@@ -33,7 +35,7 @@ func Bootstrap(config *BootstrapConfig) {
 	config.App.Use(config.Cors.Handler())
 
 	// ── Static Files ─────────────────────────────────────────────────────────
-	config.App.Static("/uploads", "./public/uploads")
+	config.App.Get("/uploads*", static.New("./public/uploads"))
 
 	// ── Storage ──────────────────────────────────────────────────────────────
 	port := config.Config.GetInt("web.port")
@@ -62,7 +64,7 @@ func Bootstrap(config *BootstrapConfig) {
 
 	rbacEngine := rbac.New(rbac.Config{
 		Store: rbacRepository,
-		UserLookup: func(c *fiber.Ctx) string {
+		UserLookup: func(c fiber.Ctx) string {
 			claims, ok := c.Locals("auth").(*util.Claims)
 			if !ok {
 				return ""

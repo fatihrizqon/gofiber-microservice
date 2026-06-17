@@ -3,7 +3,7 @@ package helper
 import (
 	"time"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 )
 
 type RefreshCookie struct {
@@ -12,7 +12,7 @@ type RefreshCookie struct {
 	Production bool
 }
 
-func (c RefreshCookie) Set(ctx *fiber.Ctx, name string, token string) {
+func (c RefreshCookie) Set(ctx fiber.Ctx, name string, token string) {
 	ctx.Cookie(&fiber.Cookie{
 		Name:     name,
 		Value:    token,
@@ -24,7 +24,7 @@ func (c RefreshCookie) Set(ctx *fiber.Ctx, name string, token string) {
 	})
 }
 
-func (c RefreshCookie) Clear(ctx *fiber.Ctx, name string) {
+func (c RefreshCookie) Clear(ctx fiber.Ctx, name string) {
 	ctx.Cookie(&fiber.Cookie{
 		Name:     name,
 		Path:     "/",

@@ -6,12 +6,12 @@ import (
 
 	"github.com/fatihrizqon/gofiber-microservice/internal/repository"
 	"github.com/fatihrizqon/gofiber-microservice/internal/util"
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
 )
 
 func NewAuth(tokenRepo repository.ITokenRepository) fiber.Handler {
-	return func(ctx *fiber.Ctx) error {
+	return func(ctx fiber.Ctx) error {
 		authHeader := ctx.Get("Authorization", "")
 		if authHeader == "" {
 			util.HandleError(ctx, fiber.StatusUnauthorized, fmt.Errorf("missing authorization header"))

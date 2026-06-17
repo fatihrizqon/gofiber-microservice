@@ -4,8 +4,8 @@ import (
 	_ "github.com/fatihrizqon/gofiber-microservice/docs"
 	"github.com/fatihrizqon/gofiber-microservice/internal/delivery/handler"
 	"github.com/fatihrizqon/gofiber-microservice/internal/rbac"
-	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/swagger"
+	swagger "github.com/gofiber/contrib/v3/swaggo"
+	"github.com/gofiber/fiber/v3"
 )
 
 type RouteConfig struct {

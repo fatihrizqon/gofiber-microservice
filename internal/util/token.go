@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/fatihrizqon/gofiber-microservice/internal/entity"
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/google/uuid"
 	"github.com/spf13/viper"

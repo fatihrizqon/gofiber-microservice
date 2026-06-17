@@ -4,7 +4,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v3"
 )
 
 var reservedKeys = map[string]bool{
@@ -25,7 +25,7 @@ type QueryParams struct {
 	Filters  map[string][]string
 }
 
-func ParseQueryParams(ctx *fiber.Ctx, fields []string) *QueryParams {
+func ParseQueryParams(ctx fiber.Ctx, fields []string) *QueryParams {
 	qp := &QueryParams{
 		Page:     1,
 		PageSize: 10,
@@ -57,7 +57,7 @@ func ParseQueryParams(ctx *fiber.Ctx, fields []string) *QueryParams {
 		qp.SortDir = "asc"
 	}
 
-	args := ctx.Context().QueryArgs()
+	args := ctx.RequestCtx().QueryArgs()
 	args.VisitAll(func(key, value []byte) {
 		k := string(key)
 		if !reservedKeys[k] {
@@ -71,3 +71,5 @@ func ParseQueryParams(ctx *fiber.Ctx, fields []string) *QueryParams {
 
 	return qp
 }
+
+// fiber:context-methods migrated
