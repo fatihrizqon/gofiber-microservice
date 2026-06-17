@@ -28,6 +28,7 @@ type IUserRepository interface {
 	FindById(id uuid.UUID) (entity.User, error)
 	Update(entity.User) error
 	Delete(id uuid.UUID) error
+	UpdateStatus(id uuid.UUID, status int) error
 	CountAll(ctx context.Context) (int64, error)
 	CountBetween(ctx context.Context, from time.Time, to time.Time) (int64, error)
 	CountVerified(ctx context.Context) (int64, error)
@@ -104,10 +105,19 @@ func (r *UserRepository) Update(u entity.User) error {
 }
 
 func (r *UserRepository) Delete(id uuid.UUID) error {
-	if err := r.Db.Where("id = ?", id).Delete(&entity.User{}).Error; err != nil {
-		return err
-	}
-	return nil
+	return r.Db.
+		Model(&entity.User{}).
+		Where("id = ?", id).
+		Update("deleted_at", time.Now()).
+		Error
+}
+
+func (r *UserRepository) UpdateStatus(id uuid.UUID, status int) error {
+	return r.Db.
+		Model(&entity.User{}).
+		Where("id = ?", id).
+		Update("status", status).
+		Error
 }
 
 // CountAll implements IUserRepository.

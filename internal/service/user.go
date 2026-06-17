@@ -20,6 +20,8 @@ type IUserService interface {
 	FindById(reqId uuid.UUID) (response.UserResponse, error)
 	Update(req request.UserUpdateRequest) (response.UserResponse, error)
 	Delete(reqId uuid.UUID) (response.UserResponse, error)
+	Lock(reqId uuid.UUID) (response.UserResponse, error)
+	Unlock(reqId uuid.UUID) (response.UserResponse, error)
 }
 
 type UserService struct {
@@ -82,6 +84,7 @@ func (s *UserService) FindAll(qp *util.QueryParams) ([]response.UserResponse, in
 			Status:    u.Status,
 			CreatedAt: u.CreatedAt,
 			UpdatedAt: u.UpdatedAt,
+			DeletedAt: u.DeletedAt,
 		})
 	}
 
@@ -102,6 +105,7 @@ func (s *UserService) FindById(reqId uuid.UUID) (response.UserResponse, error) {
 		Status:    u.Status,
 		CreatedAt: u.CreatedAt,
 		UpdatedAt: u.UpdatedAt,
+		DeletedAt: u.DeletedAt,
 	}, nil
 }
 
@@ -159,6 +163,47 @@ func (s *UserService) Delete(reqId uuid.UUID) (response.UserResponse, error) {
 	}
 
 	if err := s.IUserRepository.Delete(reqId); err != nil {
+		return response.UserResponse{}, err
+	}
+
+	return response.UserResponse{
+		Id:        u.Id,
+		Username:  u.Username,
+		Name:      u.Name,
+		Email:     u.Email,
+		Status:    u.Status,
+		CreatedAt: u.CreatedAt,
+		UpdatedAt: u.UpdatedAt,
+	}, nil
+}
+
+func (s *UserService) Lock(reqId uuid.UUID) (response.UserResponse, error) {
+	u, err := s.IUserRepository.FindById(reqId)
+	if err != nil {
+		return response.UserResponse{}, err
+	}
+
+	if err := s.IUserRepository.UpdateStatus(reqId, 0); err != nil {
+		return response.UserResponse{}, err
+	}
+
+	return response.UserResponse{
+		Id:        u.Id,
+		Username:  u.Username,
+		Name:      u.Name,
+		Email:     u.Email,
+		Status:    u.Status,
+		CreatedAt: u.CreatedAt,
+		UpdatedAt: u.UpdatedAt,
+	}, nil
+}
+func (s *UserService) Unlock(reqId uuid.UUID) (response.UserResponse, error) {
+	u, err := s.IUserRepository.FindById(reqId)
+	if err != nil {
+		return response.UserResponse{}, err
+	}
+
+	if err := s.IUserRepository.UpdateStatus(reqId, 1); err != nil {
 		return response.UserResponse{}, err
 	}
 

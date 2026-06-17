@@ -208,3 +208,67 @@ func (h *UserHandler) Delete(ctx fiber.Ctx) error {
 		Data:    result,
 	})
 }
+
+// Lock User by Id
+// @Summary Lock user
+// @Description Lock a user record by ID
+// @Tags Users
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param id path string true "User ID"
+// @Success 200 {object} response.JSON "Selected record has been locked."
+// @Failure 404 {object} response.JSON "User not found"
+// @Router /api/v1/users/{id}/lock [patch]
+func (h *UserHandler) Lock(ctx fiber.Ctx) error {
+	parsedId, err := uuid.Parse(ctx.Params("id"))
+	if err != nil {
+		util.HandleError(ctx, fiber.StatusBadRequest, err)
+		return nil
+	}
+
+	_, err = h.IUserService.Lock(parsedId)
+	if err != nil {
+		return ctx.Status(fiber.StatusNotFound).JSON(response.JSON{
+			Status:  fiber.StatusNotFound,
+			Message: err.Error(),
+		})
+	}
+
+	return ctx.Status(fiber.StatusOK).JSON(response.JSON{
+		Status:  fiber.StatusOK,
+		Message: "Selected record has been locked.",
+	})
+}
+
+// Unlock User by Id
+// @Summary Unlock user
+// @Description Unlock a user record by ID
+// @Tags Users
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param id path string true "User ID"
+// @Success 200 {object} response.JSON "Selected record has been unlocked."
+// @Failure 404 {object} response.JSON "User not found"
+// @Router /api/v1/users/{id}/unlock [patch]
+func (h *UserHandler) Unlock(ctx fiber.Ctx) error {
+	parsedId, err := uuid.Parse(ctx.Params("id"))
+	if err != nil {
+		util.HandleError(ctx, fiber.StatusBadRequest, err)
+		return nil
+	}
+
+	_, err = h.IUserService.Unlock(parsedId)
+	if err != nil {
+		return ctx.Status(fiber.StatusNotFound).JSON(response.JSON{
+			Status:  fiber.StatusNotFound,
+			Message: err.Error(),
+		})
+	}
+
+	return ctx.Status(fiber.StatusOK).JSON(response.JSON{
+		Status:  fiber.StatusOK,
+		Message: "Selected record has been unlocked.",
+	})
+}
