@@ -8,15 +8,15 @@ import (
 )
 
 type JWTService struct {
-	Secret         string
-	RefresbhSecret string
-	Expiration     time.Duration
+	Secret        string
+	RefreshSecret string
+	Expiration    time.Duration
 }
 
 func NewJWT(config *viper.Viper, log *logrus.Logger) *JWTService {
 	return &JWTService{
-		Secret:         config.GetString("jwt.secret"),
-		RefresbhSecret: config.GetString("jwt.refresh_secret"),
-		Expiration:     config.GetDuration("jwt.expiration"),
+		Secret:        config.GetString("jwt.secret"),
+		RefreshSecret: config.GetString("jwt.refresh_secret"),
+		Expiration:    config.GetDuration("jwt.expiration"),
 	}
 }
