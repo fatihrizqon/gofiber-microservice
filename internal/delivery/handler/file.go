@@ -22,7 +22,7 @@ func NewFileHandler(serv service.IFileService) *FileHandler {
 // @Security BearerAuth
 // @Accept multipart/form-data
 // @Produce json
-// @Param file formance file true "File to upload"
+// @Param file formData file true "File to upload"
 // @Success 201 {object} response.JSON "File uploaded successfully."
 // @Failure 400 {object} response.JSON "Bad request"
 // @Failure 401 {object} response.JSON "Unauthorized"
