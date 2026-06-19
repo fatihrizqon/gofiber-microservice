@@ -48,5 +48,13 @@
     "secret": "your_secret_key",
     "refresh_secret": "your_jwt_refresh_secret_key"
   },
+  "smtp": {
+    "host": "smtp.gmail.com",
+    "port": 465,
+    "username": "fatihrizqon@gmail.com",
+    "password": "qjdf vnnt cbzl bcyh",
+    "sender_name": "Go Fiber App",
+    "sender_email": "fatihrizqon@gmail.com"
+  },
   "production": false
 }

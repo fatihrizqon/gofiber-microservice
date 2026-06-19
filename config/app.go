@@ -49,9 +49,21 @@ func Bootstrap(config *BootstrapConfig) {
 	rbacRepository := repository.NewRbacRepository(config.DB)
 	fileRepository := repository.NewFileRepository(config.DB)
 
+	// ── Email Service ─────────────────────────────────────────────────────────
+	emailConfig := service.EmailConfig{
+		Host:        config.Config.GetString("smtp.host"),
+		Port:        config.Config.GetInt("smtp.port"),
+		Username:    config.Config.GetString("smtp.username"),
+		Password:    config.Config.GetString("smtp.password"),
+		SenderName:  config.Config.GetString("smtp.sender_name"),
+		SenderEmail: config.Config.GetString("smtp.sender_email"),
+	}
+	emailService := service.NewEmailService(emailConfig, config.Log)
+
 	// ── Services ──────────────────────────────────────────────────────────────
 	userService := service.NewUserService(userRepository, config.Validate)
-	authService := service.NewAuthService(authRepository, tokenRepository, config.Validate)
+	appURL := fmt.Sprintf("http://localhost:%d", config.Config.GetInt("web.port"))
+	authService := service.NewAuthService(authRepository, tokenRepository, config.Validate, emailService, appURL)
 	fileService := service.NewFileService(fileRepository, localStorage)
 
 	// ── Handlers ──────────────────────────────────────────────────────────────

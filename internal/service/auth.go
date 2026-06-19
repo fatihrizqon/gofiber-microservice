@@ -30,30 +30,46 @@ type AuthService struct {
 	IAuthRepository  repository.IAuthRepository
 	ITokenRepository repository.ITokenRepository
 	validate         *validator.Validate
+	emailService     IEmailService
+	appURL           string
 }
 
 func NewAuthService(
 	authRepo repository.IAuthRepository,
 	tokenRepo repository.ITokenRepository,
 	validate *validator.Validate,
+	emailService IEmailService,
+	appURL string,
 ) IAuthService {
 	return &AuthService{
 		IAuthRepository:  authRepo,
 		ITokenRepository: tokenRepo,
 		validate:         validate,
+		emailService:     emailService,
+		appURL:           appURL,
 	}
 }
 
 func (s *AuthService) Register(req request.RegisterRequest) (entity.User, error) {
 	var user entity.User
-	user.Email = req.Email
-	passwordHash, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
-	if err != nil {
-		return entity.User{}, fmt.Errorf("failed to hash password: %w", err)
-	}
-	user.Password = string(passwordHash)
 
-	return s.IAuthRepository.Register(user)
+	passwordHash, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+	user = entity.User{
+		Name:     req.Name,
+		Username: req.Username,
+		Email:    req.Email,
+		Password: string(passwordHash),
+	}
+
+	newUser, err := s.IAuthRepository.Register(user)
+	if err != nil {
+		return entity.User{}, err
+	}
+
+	verificationLink := fmt.Sprintf("%s/api/v1/auth/verify?email=%s", s.appURL, newUser.Email)
+	_ = s.emailService.SendVerificationEmail(newUser.Email, newUser.Email, verificationLink)
+
+	return newUser, nil
 }
 
 func (s *AuthService) Login(req request.LoginRequest) (AuthResult, error) {
