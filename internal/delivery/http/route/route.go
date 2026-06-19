@@ -9,14 +9,13 @@ import (
 )
 
 type RouteConfig struct {
-	App               *fiber.App
-	AuthMiddleware    fiber.Handler
-	CompanyMiddleware fiber.Handler
-	RbacEngine        *rbac.RBAC
-	UserHandler       *handler.UserHandler
-	AuthHandler       *handler.AuthHandler
-	FileHandler       *handler.FileHandler
-	Production        bool
+	App            *fiber.App
+	AuthMiddleware fiber.Handler
+	RbacEngine     *rbac.RBAC
+	UserHandler    *handler.UserHandler
+	AuthHandler    *handler.AuthHandler
+	FileHandler    *handler.FileHandler
+	Production     bool
 }
 
 func (rc *RouteConfig) Setup() {
