@@ -68,7 +68,7 @@ func (r *UserRepository) FindAll(qp *util.QueryParams) ([]entity.User, int, erro
 	var entities []entity.User
 	var totalCount int64
 
-	query := r.Db.Model(&entity.User{})
+	query := r.Db.Model(&entity.User{}).Where("deleted_at IS NULL")
 	query = util.ApplySearch(query, qp)
 	query = entity.User{}.ApplyFilters(query, qp.Filters)
 
@@ -105,19 +105,17 @@ func (r *UserRepository) Update(u entity.User) error {
 }
 
 func (r *UserRepository) Delete(id uuid.UUID) error {
-	return r.Db.
-		Model(&entity.User{}).
-		Where("id = ?", id).
-		Update("deleted_at", time.Now()).
-		Error
+	if err := r.Db.Model(&entity.User{}).Where("id = ?", id).Update("deleted_at", time.Now()).Error; err != nil {
+		return err
+	}
+	return nil
 }
 
 func (r *UserRepository) UpdateStatus(id uuid.UUID, status int) error {
-	return r.Db.
-		Model(&entity.User{}).
-		Where("id = ?", id).
-		Update("status", status).
-		Error
+	if err := r.Db.Model(&entity.User{}).Where("id = ?", id).Update("status", status).Error; err != nil {
+		return err
+	}
+	return nil
 }
 
 // CountAll implements IUserRepository.
