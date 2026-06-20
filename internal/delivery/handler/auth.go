@@ -53,7 +53,14 @@ func (h *AuthHandler) Register(ctx fiber.Ctx) error {
 	return ctx.Status(fiber.StatusOK).JSON(response.JSON{
 		Status:  fiber.StatusOK,
 		Message: "user registered successfully",
-		Data:    result,
+		Data: response.UserInfo{
+			Id:              result.Id,
+			Username:        result.Username,
+			Name:            result.Name,
+			Email:           result.Email,
+			Status:          result.Status,
+			EmailVerifiedAt: result.EmailVerifiedAt.Format(time.RFC3339),
+		},
 	})
 }
 

@@ -453,6 +453,60 @@ paths:
       summary: Update user
       tags:
       - Users
+  /api/v1/users/{id}/lock:
+    patch:
+      consumes:
+      - application/json
+      description: Lock a user record by ID
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Selected record has been locked.
+          schema:
+            $ref: '#/definitions/response.JSON'
+        "404":
+          description: User not found
+          schema:
+            $ref: '#/definitions/response.JSON'
+      security:
+      - BearerAuth: []
+      summary: Lock user
+      tags:
+      - Users
+  /api/v1/users/{id}/unlock:
+    patch:
+      consumes:
+      - application/json
+      description: Unlock a user record by ID
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Selected record has been unlocked.
+          schema:
+            $ref: '#/definitions/response.JSON'
+        "404":
+          description: User not found
+          schema:
+            $ref: '#/definitions/response.JSON'
+      security:
+      - BearerAuth: []
+      summary: Unlock user
+      tags:
+      - Users
 securityDefinitions:
   BearerAuth:
     in: header
