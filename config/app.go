@@ -66,11 +66,13 @@ func Bootstrap(deps *BootstrapConfig) {
 	appURL := cfg.GetString("web.base_url")
 	authService := service.NewAuthService(authRepository, tokenRepository, deps.Validate, emailService, appURL)
 	fileService := service.NewFileService(fileRepository, localStorage)
+	rbacService := service.NewRbacService(rbacRepository, userRepository, deps.Validate)
 
 	// ── Handlers ──────────────────────────────────────────────────────────────
 	userHandler := handler.NewUserHandler(userService)
 	authHandler := handler.NewAuthHandler(authService, deps.Production)
 	fileHandler := handler.NewFileHandler(fileService)
+	rbacHandler := handler.NewRbacHandler(rbacService)
 
 	// ── Middleware ────────────────────────────────────────────────────────────
 	authMiddleware := middleware.NewAuth(tokenRepository)
@@ -94,6 +96,7 @@ func Bootstrap(deps *BootstrapConfig) {
 		UserHandler:    userHandler,
 		AuthHandler:    authHandler,
 		FileHandler:    fileHandler,
+		RbacHandler:    rbacHandler,
 		Production:     deps.Production,
 	}
 

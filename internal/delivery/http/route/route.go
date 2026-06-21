@@ -15,6 +15,7 @@ type RouteConfig struct {
 	UserHandler    *handler.UserHandler
 	AuthHandler    *handler.AuthHandler
 	FileHandler    *handler.FileHandler
+	RbacHandler    *handler.RbacHandler
 	Production     bool
 }
 
@@ -43,4 +44,12 @@ func (rc *RouteConfig) SetupAuthRoute() {
 	rc.App.Patch("/api/v1/users/:id/unlock", rc.RbacEngine.Require("users.write"), rc.UserHandler.Unlock)
 
 	rc.App.Post("/api/v1/files/upload", rc.FileHandler.Upload)
+
+	// User - Role Management
+	rc.App.Post("/api/v1/users/:id/roles", rc.RbacEngine.Require("rbac.manage"), rc.RbacHandler.AssignRole)
+	rc.App.Delete("/api/v1/users/:id/roles/:role_id", rc.RbacEngine.Require("rbac.manage"), rc.RbacHandler.RevokeRole)
+
+	// Role - Permission Management
+	rc.App.Post("/api/v1/roles/:id/permissions", rc.RbacEngine.Require("rbac.manage"), rc.RbacHandler.AssignPermission)
+	rc.App.Delete("/api/v1/roles/:id/permissions/:permission_id", rc.RbacEngine.Require("rbac.manage"), rc.RbacHandler.RevokePermission)
 }
