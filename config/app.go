@@ -15,6 +15,7 @@ import (
 	"github.com/fatihrizqon/gofiber-microservice/internal/util/storage"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v3"
+	"github.com/hibiken/asynq"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"gorm.io/gorm"
@@ -31,44 +32,44 @@ type BootstrapConfig struct {
 	Production bool
 }
 
-func Bootstrap(config *BootstrapConfig) {
-	config.App.Use(config.Cors.Handler())
+func Bootstrap(deps *BootstrapConfig) {
+	cfg := deps.Config
+
+	deps.App.Use(deps.Cors.Handler())
 
 	// ── Static Files ─────────────────────────────────────────────────────────
-	config.App.Get("/uploads*", static.New("./public/uploads"))
+	deps.App.Get("/uploads*", static.New("./public/uploads"))
 
 	// ── Storage ──────────────────────────────────────────────────────────────
-	port := config.Config.GetInt("web.port")
-	baseURL := fmt.Sprintf("http://localhost:%d/uploads", port)
+	baseURL := fmt.Sprintf("%s/uploads", cfg.GetString("web.base_url"))
 	localStorage := storage.NewLocalStorage("./public/uploads", baseURL)
 
 	// ── Repositories ──────────────────────────────────────────────────────────
-	userRepository := repository.NewUserRepository(config.DB)
-	authRepository := repository.NewAuthRepository(config.DB)
-	tokenRepository := repository.NewTokenRepository(config.DB)
-	rbacRepository := repository.NewRbacRepository(config.DB)
-	fileRepository := repository.NewFileRepository(config.DB)
+	userRepository := repository.NewUserRepository(deps.DB)
+	authRepository := repository.NewAuthRepository(deps.DB)
+	tokenRepository := repository.NewTokenRepository(deps.DB)
+	rbacRepository := repository.NewRbacRepository(deps.DB)
+	fileRepository := repository.NewFileRepository(deps.DB)
 
 	// ── Email Service ─────────────────────────────────────────────────────────
-	emailConfig := service.EmailConfig{
-		Host:        config.Config.GetString("smtp.host"),
-		Port:        config.Config.GetInt("smtp.port"),
-		Username:    config.Config.GetString("smtp.username"),
-		Password:    config.Config.GetString("smtp.password"),
-		SenderName:  config.Config.GetString("smtp.sender_name"),
-		SenderEmail: config.Config.GetString("smtp.sender_email"),
+	redisOpt := asynq.RedisClientOpt{
+		Addr:     fmt.Sprintf("%s:%d", cfg.GetString("redis.host"), cfg.GetInt("redis.port")),
+		Password: cfg.GetString("redis.password"),
+		DB:       cfg.GetInt("redis.db"),
 	}
-	emailService := service.NewEmailService(emailConfig, config.Log)
+	asynqClient := asynq.NewClient(redisOpt)
+
+	emailService := service.NewEmailService(deps.Log, asynqClient)
 
 	// ── Services ──────────────────────────────────────────────────────────────
-	userService := service.NewUserService(userRepository, config.Validate)
-	appURL := fmt.Sprintf("http://localhost:%d", config.Config.GetInt("web.port"))
-	authService := service.NewAuthService(authRepository, tokenRepository, config.Validate, emailService, appURL)
+	userService := service.NewUserService(userRepository, deps.Validate)
+	appURL := cfg.GetString("web.base_url")
+	authService := service.NewAuthService(authRepository, tokenRepository, deps.Validate, emailService, appURL)
 	fileService := service.NewFileService(fileRepository, localStorage)
 
 	// ── Handlers ──────────────────────────────────────────────────────────────
 	userHandler := handler.NewUserHandler(userService)
-	authHandler := handler.NewAuthHandler(authService, config.Production)
+	authHandler := handler.NewAuthHandler(authService, deps.Production)
 	fileHandler := handler.NewFileHandler(fileService)
 
 	// ── Middleware ────────────────────────────────────────────────────────────
@@ -87,13 +88,13 @@ func Bootstrap(config *BootstrapConfig) {
 
 	// ── Routes ────────────────────────────────────────────────────────────────
 	routeConfig := route.RouteConfig{
-		App:            config.App,
+		App:            deps.App,
 		AuthMiddleware: authMiddleware,
 		RbacEngine:     rbacEngine,
 		UserHandler:    userHandler,
 		AuthHandler:    authHandler,
 		FileHandler:    fileHandler,
-		Production:     config.Production,
+		Production:     deps.Production,
 	}
 
 	routeConfig.Setup()

@@ -6,18 +6,12 @@ import (
 	"html/template"
 	"path/filepath"
 
+	"github.com/fatihrizqon/gofiber-microservice/internal/worker"
+	"github.com/hibiken/asynq"
 	"github.com/sirupsen/logrus"
-	"gopkg.in/gomail.v2"
 )
 
-type EmailConfig struct {
-	Host        string
-	Port        int
-	Username    string
-	Password    string
-	SenderName  string
-	SenderEmail string
-}
+// EmailConfig is now removed.
 
 type IEmailService interface {
 	SendVerificationEmail(to, name, verificationLink string) error
@@ -26,14 +20,14 @@ type IEmailService interface {
 }
 
 type EmailService struct {
-	config EmailConfig
-	log    *logrus.Logger
+	log         *logrus.Logger
+	asynqClient *asynq.Client
 }
 
-func NewEmailService(config EmailConfig, log *logrus.Logger) IEmailService {
+func NewEmailService(log *logrus.Logger, asynqClient *asynq.Client) IEmailService {
 	return &EmailService{
-		config: config,
-		log:    log,
+		log:         log,
+		asynqClient: asynqClient,
 	}
 }
 
@@ -53,22 +47,18 @@ func (s *EmailService) parseTemplate(templateName string, data interface{}) (str
 }
 
 func (s *EmailService) sendEmail(to, subject, body string) {
-	go func() {
-		m := gomail.NewMessage()
-		sender := fmt.Sprintf("%s <%s>", s.config.SenderName, s.config.SenderEmail)
-		m.SetHeader("From", sender)
-		m.SetHeader("To", to)
-		m.SetHeader("Subject", subject)
-		m.SetBody("text/html", body)
+	task, err := worker.NewEmailDeliveryTask(to, subject, body)
+	if err != nil {
+		s.log.Errorf("Failed to create email delivery task: %v", err)
+		return
+	}
 
-		d := gomail.NewDialer(s.config.Host, s.config.Port, s.config.Username, s.config.Password)
-
-		if err := d.DialAndSend(m); err != nil {
-			s.log.Errorf("Failed to send email to %s: %v", to, err)
-		} else {
-			s.log.Infof("Email successfully sent to %s", to)
-		}
-	}()
+	info, err := s.asynqClient.Enqueue(task)
+	if err != nil {
+		s.log.Errorf("Failed to enqueue email delivery task: %v", err)
+		return
+	}
+	s.log.Infof("Enqueued email delivery task: id=%s queue=%s", info.ID, info.Queue)
 }
 
 func (s *EmailService) SendVerificationEmail(to, name, verificationLink string) error {

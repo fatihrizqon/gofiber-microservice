@@ -68,8 +68,8 @@ func (s *AuthService) Register(req request.RegisterRequest) (entity.User, error)
 		return entity.User{}, err
 	}
 
-	// verificationLink := fmt.Sprintf("%s/api/v1/auth/verify?email=%s", s.appURL, newUser.Email)
-	// _ = s.emailService.SendVerificationEmail(newUser.Email, newUser.Email, verificationLink)
+	verificationLink := fmt.Sprintf("%s/api/v1/auth/verify?email=%s", s.appURL, newUser.Email)
+	_ = s.emailService.SendVerificationEmail(newUser.Email, newUser.Email, verificationLink)
 
 	return newUser, nil
 }
