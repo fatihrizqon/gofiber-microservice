@@ -28,6 +28,7 @@ type IUserRepository interface {
 	FindById(id uuid.UUID) (entity.User, error)
 	Update(entity.User) error
 	Delete(id uuid.UUID) error
+	UpdateAvatar(userId uuid.UUID, fileId uuid.UUID) error
 	UpdateStatus(id uuid.UUID, status int) error
 	CountAll(ctx context.Context) (int64, error)
 	CountBetween(ctx context.Context, from time.Time, to time.Time) (int64, error)
@@ -68,7 +69,7 @@ func (r *UserRepository) FindAll(qp *util.QueryParams) ([]entity.User, int, erro
 	var entities []entity.User
 	var totalCount int64
 
-	query := r.Db.Model(&entity.User{}).Where("deleted_at IS NULL")
+	query := r.Db.Model(&entity.User{}).Preload("Avatar").Where("deleted_at IS NULL")
 	query = util.ApplySearch(query, qp)
 	query = entity.User{}.ApplyFilters(query, qp.Filters)
 
@@ -91,7 +92,7 @@ func (r *UserRepository) FindAll(qp *util.QueryParams) ([]entity.User, int, erro
 
 func (r *UserRepository) FindById(id uuid.UUID) (entity.User, error) {
 	var u entity.User
-	if err := r.Db.Where("id = ?", id).First(&u).Error; err != nil {
+	if err := r.Db.Preload("Avatar").Where("id = ?", id).First(&u).Error; err != nil {
 		return u, err
 	}
 	return u, nil
@@ -106,6 +107,13 @@ func (r *UserRepository) Update(u entity.User) error {
 
 func (r *UserRepository) Delete(id uuid.UUID) error {
 	if err := r.Db.Model(&entity.User{}).Where("id = ?", id).Update("deleted_at", time.Now()).Error; err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *UserRepository) UpdateAvatar(userId uuid.UUID, fileId uuid.UUID) error {
+	if err := r.Db.Model(&entity.User{}).Where("id = ?", userId).Update("avatar_file_id", fileId).Error; err != nil {
 		return err
 	}
 	return nil

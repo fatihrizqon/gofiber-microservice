@@ -272,3 +272,47 @@ func (h *UserHandler) Unlock(ctx fiber.Ctx) error {
 		Message: "Selected record has been unlocked.",
 	})
 }
+
+// Upload Avatar
+// @Summary Upload user avatar
+// @Description Upload a new avatar for the authenticated user
+// @Tags Users
+// @Security BearerAuth
+// @Accept multipart/form-data
+// @Produce json
+// @Param avatar formData file true "Avatar image file"
+// @Success 200 {object} response.JSON "Avatar has been uploaded successfully."
+// @Failure 400 {object} response.JSON "Bad request"
+// @Failure 500 {object} response.JSON "Internal Server Error"
+// @Router /api/v1/users/me/avatar [post]
+func (h *UserHandler) UploadAvatar(ctx fiber.Ctx) error {
+	claims, ok := ctx.Locals("auth").(*util.Claims)
+	if !ok {
+		return ctx.Status(fiber.StatusUnauthorized).JSON(response.JSON{
+			Status:  fiber.StatusUnauthorized,
+			Message: "Unauthorized",
+		})
+	}
+
+	file, err := ctx.FormFile("avatar")
+	if err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(response.JSON{
+			Status:  fiber.StatusBadRequest,
+			Message: "avatar file is required",
+		})
+	}
+
+	result, err := h.IUserService.UploadAvatar(ctx.Context(), claims.UserID, file)
+	if err != nil {
+		return ctx.Status(fiber.StatusInternalServerError).JSON(response.JSON{
+			Status:  fiber.StatusInternalServerError,
+			Message: err.Error(),
+		})
+	}
+
+	return ctx.Status(fiber.StatusOK).JSON(response.JSON{
+		Status:  fiber.StatusOK,
+		Message: "Avatar has been uploaded successfully.",
+		Data:    result,
+	})
+}

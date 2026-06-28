@@ -36,6 +36,9 @@ func (rc *RouteConfig) SetupAuthRoute() {
 
 	rc.App.Post("/api/v1/auth/logout", rc.AuthHandler.Logout)
 
+	// User Profile
+	rc.App.Post("/api/v1/users/me/avatar", rc.UserHandler.UploadAvatar)
+
 	rc.App.Get("/api/v1/users", rc.RbacEngine.Require("users.read"), rc.UserHandler.FindAll)
 	rc.App.Get("/api/v1/users/:id", rc.RbacEngine.Require("users.read"), rc.UserHandler.FindById)
 	rc.App.Put("/api/v1/users/:id", rc.RbacEngine.Require("users.write"), rc.UserHandler.Update)

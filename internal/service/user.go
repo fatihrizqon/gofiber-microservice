@@ -1,7 +1,9 @@
 package service
 
 import (
+	"context"
 	"errors"
+	"mime/multipart"
 	"strings"
 
 	"github.com/fatihrizqon/gofiber-microservice/internal/delivery/http/request"
@@ -22,15 +24,21 @@ type IUserService interface {
 	Delete(reqId uuid.UUID) (response.UserResponse, error)
 	Lock(reqId uuid.UUID) (response.UserResponse, error)
 	Unlock(reqId uuid.UUID) (response.UserResponse, error)
+	UploadAvatar(ctx context.Context, userId uuid.UUID, file *multipart.FileHeader) (response.UserResponse, error)
 }
 
 type UserService struct {
 	IUserRepository repository.IUserRepository
 	validate        *validator.Validate
+	fileService     IFileService
 }
 
-func NewUserService(repo repository.IUserRepository, validate *validator.Validate) IUserService {
-	return &UserService{IUserRepository: repo, validate: validate}
+func NewUserService(repo repository.IUserRepository, validate *validator.Validate, fileService IFileService) IUserService {
+	return &UserService{
+		IUserRepository: repo, 
+		validate: validate,
+		fileService: fileService,
+	}
 }
 
 func (s *UserService) Create(req request.UserCreateRequest) (entity.User, error) {
@@ -76,7 +84,7 @@ func (s *UserService) FindAll(qp *util.QueryParams) ([]response.UserResponse, in
 
 	resps := make([]response.UserResponse, 0, len(entities))
 	for _, u := range entities {
-		resps = append(resps, response.UserResponse{
+		resp := response.UserResponse{
 			Id:        u.Id,
 			Username:  u.Username,
 			Name:      u.Name,
@@ -85,7 +93,11 @@ func (s *UserService) FindAll(qp *util.QueryParams) ([]response.UserResponse, in
 			CreatedAt: u.CreatedAt,
 			UpdatedAt: u.UpdatedAt,
 			DeletedAt: u.DeletedAt,
-		})
+		}
+		if u.Avatar != nil {
+			resp.AvatarURL = "/uploads/" + u.Avatar.Path
+		}
+		resps = append(resps, resp)
 	}
 
 	return resps, totalCount, nil
@@ -97,7 +109,7 @@ func (s *UserService) FindById(reqId uuid.UUID) (response.UserResponse, error) {
 		return response.UserResponse{}, err
 	}
 
-	return response.UserResponse{
+	resp := response.UserResponse{
 		Id:        u.Id,
 		Username:  u.Username,
 		Name:      u.Name,
@@ -106,7 +118,13 @@ func (s *UserService) FindById(reqId uuid.UUID) (response.UserResponse, error) {
 		CreatedAt: u.CreatedAt,
 		UpdatedAt: u.UpdatedAt,
 		DeletedAt: u.DeletedAt,
-	}, nil
+	}
+
+	if u.Avatar != nil {
+		resp.AvatarURL = "/uploads/" + u.Avatar.Path
+	}
+
+	return resp, nil
 }
 
 func (s *UserService) Update(req request.UserUpdateRequest) (response.UserResponse, error) {
@@ -154,6 +172,38 @@ func (s *UserService) Update(req request.UserUpdateRequest) (response.UserRespon
 		CreatedAt: u.CreatedAt,
 		UpdatedAt: u.UpdatedAt,
 	}, nil
+}
+
+func (s *UserService) UploadAvatar(ctx context.Context, userId uuid.UUID, file *multipart.FileHeader) (response.UserResponse, error) {
+	fileResp, err := s.fileService.Upload(ctx, file, userId)
+	if err != nil {
+		return response.UserResponse{}, err
+	}
+
+	if err := s.IUserRepository.UpdateAvatar(userId, fileResp.Id); err != nil {
+		return response.UserResponse{}, err
+	}
+
+	u, err := s.IUserRepository.FindById(userId)
+	if err != nil {
+		return response.UserResponse{}, err
+	}
+
+	resp := response.UserResponse{
+		Id:        u.Id,
+		Username:  u.Username,
+		Name:      u.Name,
+		Email:     u.Email,
+		Status:    u.Status,
+		CreatedAt: u.CreatedAt,
+		UpdatedAt: u.UpdatedAt,
+	}
+
+	if u.Avatar != nil {
+		resp.AvatarURL = "/uploads/" + u.Avatar.Path // Ideally use storage.GetURL but keeping it simple, or inject base url. wait, FileService returns URL in FileResponse!
+	}
+
+	return resp, nil
 }
 
 func (s *UserService) Delete(reqId uuid.UUID) (response.UserResponse, error) {

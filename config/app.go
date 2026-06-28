@@ -54,10 +54,10 @@ func Bootstrap(deps *BootstrapConfig) {
 	emailService := service.NewEmailService(deps.Log)
 
 	// ── Services ──────────────────────────────────────────────────────────────
-	userService := service.NewUserService(userRepository, deps.Validate)
+	fileService := service.NewFileService(fileRepository, localStorage)
+	userService := service.NewUserService(userRepository, deps.Validate, fileService)
 	appURL := cfg.GetString("web.base_url")
 	authService := service.NewAuthService(authRepository, tokenRepository, deps.Validate, emailService, appURL)
-	fileService := service.NewFileService(fileRepository, localStorage)
 	rbacService := service.NewRbacService(rbacRepository, userRepository, deps.Validate)
 
 	// ── Handlers ──────────────────────────────────────────────────────────────
