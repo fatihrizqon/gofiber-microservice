@@ -63,13 +63,16 @@ func (s *AuthService) Register(req request.RegisterRequest) (entity.User, error)
 		Password: string(passwordHash),
 	}
 
-	newUser, err := s.IAuthRepository.Register(user)
+	verificationLink := fmt.Sprintf("%s/api/v1/auth/verify?email=%s", s.appURL, user.Email)
+	job, err := s.emailService.CreateVerificationEmailJob(user.Email, user.Email, verificationLink)
+	if err != nil {
+		return entity.User{}, fmt.Errorf("failed to create email job: %w", err)
+	}
+
+	newUser, err := s.IAuthRepository.RegisterWithJobs(user, []entity.RedisJob{*job})
 	if err != nil {
 		return entity.User{}, err
 	}
-
-	verificationLink := fmt.Sprintf("%s/api/v1/auth/verify?email=%s", s.appURL, newUser.Email)
-	_ = s.emailService.SendVerificationEmail(newUser.Email, newUser.Email, verificationLink)
 
 	return newUser, nil
 }

@@ -6,28 +6,27 @@ import (
 	"html/template"
 	"path/filepath"
 
+	"github.com/fatihrizqon/gofiber-microservice/internal/entity"
+	"github.com/fatihrizqon/gofiber-microservice/internal/util"
 	"github.com/fatihrizqon/gofiber-microservice/internal/worker"
-	"github.com/hibiken/asynq"
 	"github.com/sirupsen/logrus"
 )
 
 // EmailConfig is now removed.
 
 type IEmailService interface {
-	SendVerificationEmail(to, name, verificationLink string) error
-	SendResetPasswordEmail(to, name, resetLink string) error
-	SendNotificationEmail(to, subject, message string) error
+	CreateVerificationEmailJob(to, name, verificationLink string) (*entity.RedisJob, error)
+	CreateResetPasswordEmailJob(to, name, resetLink string) (*entity.RedisJob, error)
+	CreateNotificationEmailJob(to, subject, message string) (*entity.RedisJob, error)
 }
 
 type EmailService struct {
-	log         *logrus.Logger
-	asynqClient *asynq.Client
+	log *logrus.Logger
 }
 
-func NewEmailService(log *logrus.Logger, asynqClient *asynq.Client) IEmailService {
+func NewEmailService(log *logrus.Logger) IEmailService {
 	return &EmailService{
-		log:         log,
-		asynqClient: asynqClient,
+		log: log,
 	}
 }
 
@@ -46,22 +45,24 @@ func (s *EmailService) parseTemplate(templateName string, data interface{}) (str
 	return buf.String(), nil
 }
 
-func (s *EmailService) sendEmail(to, subject, body string) {
+func (s *EmailService) createEmailJob(to, subject, body string) (*entity.RedisJob, error) {
 	task, err := worker.NewEmailDeliveryTask(to, subject, body)
 	if err != nil {
 		s.log.Errorf("Failed to create email delivery task: %v", err)
-		return
+		return nil, err
 	}
 
-	info, err := s.asynqClient.Enqueue(task)
-	if err != nil {
-		s.log.Errorf("Failed to enqueue email delivery task: %v", err)
-		return
+	job := &entity.RedisJob{
+		ID:      util.GenerateUUID().String(),
+		Type:    task.Type(),
+		Payload: task.Payload(),
+		Status:  "PENDING",
 	}
-	s.log.Infof("Enqueued email delivery task: id=%s queue=%s", info.ID, info.Queue)
+
+	return job, nil
 }
 
-func (s *EmailService) SendVerificationEmail(to, name, verificationLink string) error {
+func (s *EmailService) CreateVerificationEmailJob(to, name, verificationLink string) (*entity.RedisJob, error) {
 	data := map[string]string{
 		"Name":             name,
 		"VerificationLink": verificationLink,
@@ -69,14 +70,13 @@ func (s *EmailService) SendVerificationEmail(to, name, verificationLink string) 
 
 	body, err := s.parseTemplate("verification.html", data)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	s.sendEmail(to, "Verifikasi Alamat Email Anda", body)
-	return nil
+	return s.createEmailJob(to, "Verifikasi Alamat Email Anda", body)
 }
 
-func (s *EmailService) SendResetPasswordEmail(to, name, resetLink string) error {
+func (s *EmailService) CreateResetPasswordEmailJob(to, name, resetLink string) (*entity.RedisJob, error) {
 	data := map[string]string{
 		"Name":      name,
 		"ResetLink": resetLink,
@@ -84,23 +84,21 @@ func (s *EmailService) SendResetPasswordEmail(to, name, resetLink string) error 
 
 	body, err := s.parseTemplate("reset_password.html", data)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	s.sendEmail(to, "Reset Password Akun Anda", body)
-	return nil
+	return s.createEmailJob(to, "Reset Password Akun Anda", body)
 }
 
-func (s *EmailService) SendNotificationEmail(to, subject, message string) error {
+func (s *EmailService) CreateNotificationEmailJob(to, subject, message string) (*entity.RedisJob, error) {
 	data := map[string]string{
 		"Message": message,
 	}
 
 	body, err := s.parseTemplate("notification.html", data)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	s.sendEmail(to, subject, body)
-	return nil
+	return s.createEmailJob(to, subject, body)
 }

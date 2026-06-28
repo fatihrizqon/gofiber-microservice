@@ -9,6 +9,7 @@ import (
 
 type IAuthRepository interface {
 	Register(user entity.User) (entity.User, error)
+	RegisterWithJobs(user entity.User, jobs []entity.RedisJob) (entity.User, error)
 	Login(username string) (entity.User, error)
 }
 
@@ -24,6 +25,27 @@ func (r *AuthRepository) Register(user entity.User) (entity.User, error) {
 	if err := r.Db.Create(&user).Error; err != nil {
 		return entity.User{}, err
 	}
+	return user, nil
+}
+
+func (r *AuthRepository) RegisterWithJobs(user entity.User, jobs []entity.RedisJob) (entity.User, error) {
+	err := r.Db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Create(&user).Error; err != nil {
+			return err
+		}
+		
+		for _, job := range jobs {
+			if err := tx.Create(&job).Error; err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+
+	if err != nil {
+		return entity.User{}, err
+	}
+	
 	return user, nil
 }
 

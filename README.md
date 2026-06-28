@@ -2,13 +2,11 @@
 
 A production-oriented backend service built with **Golang** and **Fiber**, emphasizing maintainability, clear boundaries, and long-term scalability. This project demonstrates authentication using **JWT**, a structured **Clean Architecture** approach, and API documentation generated automatically using **Swagger (Swag)**.
 
-This repository is intended for **portfolio purposes** and as a reference for building scalable Go services.
-
 ---
 
 ## ✨ Key Capabilities
 
-- RESTful API built with **Fiber v2**
+- RESTful API built with **Fiber v3**
 - **JWT-based authentication** (access token)
 - **Dedicated Role-Based Access Control (RBAC)** local middleware (`internal/rbac`)
 - Clean Architecture (separation of concerns)
@@ -42,8 +40,8 @@ Cross-cutting concerns like logging and configuration are centralized (e.g. `log
 
 ## 🛠️ Tech Stack
 
-- **Go** 1.24
-- **Fiber** v2
+- **Go** 1.26
+- **Fiber** v3
 - **GORM** (PostgreSQL)
 - **JWT** (`golang-jwt/jwt`)
 - **Swagger / OpenAPI** (`swaggo/swag`)
@@ -202,23 +200,14 @@ This project is open-source and available under the **MIT License**.
 Fatih Rizqon
 
 
-## Next Sprint Additions
+## 📦 Recent Updates (Outbox Pattern & Worker Refactoring)
 
-### New Backend Services
-- `StockMovementService` — FIFO & moving-average valuation, stock balance queries
-- `RBACMiddleware` — permission-based access control (`RequirePermission`, `RequireAnyPermission`)
-- `SeedPostingRules` — seeds default double-entry rules for all transaction types
+### 1. Robust Background Jobs (Outbox Pattern)
+- **Transactional Enqueueing**: Instead of pushing directly to Redis, asynchronous tasks (like sending emails) are now persisted in the PostgreSQL `redis_jobs` table atomically with business entities (e.g., User Registration).
+- **Guaranteed Delivery**: A dedicated background sweeper (`internal/worker/sweeper.go`) picks up `PENDING` jobs and forwards them to Asynq. This guarantees tasks are never lost even if Redis goes down.
 
-### New Unit Tests (3 files, ~40 test cases)
-- `posting_engine_test.go` — WorkflowTransition, WorkflowActionToState
-- `sales_invoice_test.go` — Create validation, FindAll/FindById, full workflow lifecycle
-- `vendor_bill_test.go` — Full workflow lifecycle, period close/lock transitions
+### 2. Independent Worker Architecture
+- **Worker Main (`cmd/worker/main.go`)**: Separated from the HTTP web server.
+- **Worker Bootstrap**: Logic has been encapsulated in `config/worker.go` (`BootstrapWorker`) for cleaner initialization of the DB, Asynq Client, Job Sweeper, and Worker Processors, ensuring architectural consistency.
 
-### Frontend
-- `CreateInvoiceModal` — multi-line Sales Invoice creation form with live totals
-- `CreateVendorBillModal` — multi-line Vendor Bill creation form with tax calculation
-- Both wired into their respective list pages
-
-### Repository Refactors
-- `IVendorBillRepository` expanded: `Create`, `UpdateStatus`, `HasOpenPayments`, `GenerateBillNo`
-- `VendorBillService.Transition` now uses repo methods (testable without raw DB)
+---

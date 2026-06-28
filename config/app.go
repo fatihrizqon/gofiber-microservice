@@ -15,7 +15,6 @@ import (
 	"github.com/fatihrizqon/gofiber-microservice/internal/util/storage"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v3"
-	"github.com/hibiken/asynq"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"gorm.io/gorm"
@@ -52,14 +51,7 @@ func Bootstrap(deps *BootstrapConfig) {
 	fileRepository := repository.NewFileRepository(deps.DB)
 
 	// ── Email Service ─────────────────────────────────────────────────────────
-	redisOpt := asynq.RedisClientOpt{
-		Addr:     fmt.Sprintf("%s:%d", cfg.GetString("redis.host"), cfg.GetInt("redis.port")),
-		Password: cfg.GetString("redis.password"),
-		DB:       cfg.GetInt("redis.db"),
-	}
-	asynqClient := asynq.NewClient(redisOpt)
-
-	emailService := service.NewEmailService(deps.Log, asynqClient)
+	emailService := service.NewEmailService(deps.Log)
 
 	// ── Services ──────────────────────────────────────────────────────────────
 	userService := service.NewUserService(userRepository, deps.Validate)
