@@ -211,3 +211,14 @@ Fatih Rizqon
 - **Worker Bootstrap**: Logic has been encapsulated in `config/worker.go` (`BootstrapWorker`) for cleaner initialization of the DB, Asynq Client, Job Sweeper, and Worker Processors, ensuring architectural consistency.
 
 ---
+
+## 📐 Architectural Standardization (Boilerplate Pattern)
+
+This boilerplate is designed to be highly reusable as a foundation for various microservices, including highly complex domains like enterprise accounting systems. It strictly enforces a **Layered Clean Architecture** to maintain separation of concerns:
+
+- **`internal/delivery` (HTTP Layer):** Handles routing, request parsing (JSON), and sending responses. Must contain **no business logic** or direct database queries.
+- **`internal/service` (Business Logic Layer):** Contains the core business rules. Services act as orchestrators and can interact with multiple repositories (or other services via Dependency Injection) to handle complex processes.
+- **`internal/repository` (Data Layer):** Handles direct database access and complex **ACID Transactions**. Database transactions spanning multiple tables (e.g., Journal Entries and Lines) must be safely abstracted here.
+- **`internal/worker` (Background Jobs):** Handles asynchronous processing (e.g., generating heavy PDF reports, sending email notifications) without blocking the primary HTTP event loop.
+
+When extending this boilerplate or instructing Junior Developers / AI Assistants to implement new PRDs, **this pattern is the absolute standard**. Ensure that database operations never leak into the `delivery` layer and that background tasks are routed to the `worker` layer, ensuring the system remains decoupled, scalable, and testable.
